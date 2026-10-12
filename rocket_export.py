@@ -334,9 +334,12 @@ def export(rc, outdir, skip_files=False):
                     ok = rc.download(path, dest)
                     file_map[path] = os.path.relpath(dest, folder) if ok else None
 
-        with open(os.path.join(folder, "messages.json"), "w") as f:
+        # Always write text as UTF-8. On Windows, open() otherwise uses the
+        # active ANSI code page, which cannot encode many emoji and causes the
+        # export to stop with UnicodeEncodeError partway through a room.
+        with open(os.path.join(folder, "messages.json"), "w", encoding="utf-8") as f:
             json.dump(msgs, f, indent=2, ensure_ascii=False)
-        with open(os.path.join(folder, "chat.html"), "w") as f:
+        with open(os.path.join(folder, "chat.html"), "w", encoding="utf-8") as f:
             f.write(render_html(label, msgs, file_map))
 
         n_files = sum(1 for v in file_map.values() if v)
@@ -344,7 +347,7 @@ def export(rc, outdir, skip_files=False):
         index.append({"kind": kind, "label": label, "id": room_id,
                       "messages": len(msgs), "files": n_files})
 
-    with open(os.path.join(outdir, "index.json"), "w") as f:
+    with open(os.path.join(outdir, "index.json"), "w", encoding="utf-8") as f:
         json.dump(index, f, indent=2, ensure_ascii=False)
     total_m = sum(r["messages"] for r in index)
     total_f = sum(r["files"] for r in index)
